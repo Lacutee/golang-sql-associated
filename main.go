@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"golang-sql-associated/database"
 	"log"
 	"net/http"
 
@@ -24,6 +25,24 @@ func RouterStart() {
 	log.Fatal(http.ListenAndServe(":8090", router))
 }
 
+func InitDB() {
+	config :=
+		database.Config{
+			ServerName: "localhost:3306",
+			User:       "root",
+			Password:   "",
+			DB:         "go_lang_asossicated",
+		}
+
+	connectionString := database.GetConnectionString(config)
+	err := database.Connect(connectionString)
+	if err != nil {
+		panic(err.Error())
+	}
+	database.Migrate()
+}
+
 func main() {
+	InitDB()
 	RouterStart()
 }
