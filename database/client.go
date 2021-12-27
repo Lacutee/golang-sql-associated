@@ -4,15 +4,18 @@ import (
 	"golang-sql-associated/models"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var Connector *gorm.DB
 
 func Connect(connectionString string) error {
 	var err error
-	Connector, err = gorm.Open("mysql", connectionString)
+	// dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+	Connector, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		return err
 	}
@@ -21,5 +24,10 @@ func Connect(connectionString string) error {
 }
 
 func Migrate() {
-	Connector.AutoMigrate(&models.EventOrder{}, &models.MasterEvent{})
+
+	Connector.Migrator().CreateTable(&models.MasterEvent{})
+	Connector.Migrator().CreateTable(&models.EventOrder{})
+
+	Connector.Migrator().CreateConstraint(&models.MasterEvent{}, "EventOrder")
+	Connector.Migrator().CreateConstraint(&models.MasterEvent{}, "fk_event_order")
 }
